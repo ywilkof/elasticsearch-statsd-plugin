@@ -11,7 +11,7 @@ The data sent to the StatsD server tries to be roughly equivalent to the [Indice
 To install a prepackaged plugin use the following command:
 
 ```
-bin/plugin -install statsd -url https://github.com/Automattic/elasticsearch-statsd-plugin/releases/download/v0.3.3/elasticsearch-statsd-0.3.3.zip
+bin/plugin -install statsd -url https://github.com/Automattic/elasticsearch-statsd-plugin/releases/download/v0.4.0/elasticsearch-statsd-0.4.0.zip
 ```
 
 You can also build your own by doing the following:
@@ -20,7 +20,7 @@ You can also build your own by doing the following:
 git clone http://github.com/Automattic/elasticsearch-statsd-plugin.git
 cd elasticsearch-statsd-plugin
 mvn package
-bin/plugin -install statsd -url file:///absolute/path/to/current/dir/target/releases/elasticsearch-statsd-0.3.3.zip
+bin/plugin -install statsd -url file:///absolute/path/to/current/dir/target/releases/elasticsearch-statsd-0.4.0.zip
 ```
 
 
@@ -64,7 +64,7 @@ This plugin reports both node level and cluster level stats, the StatsD keys wil
 
 ## Credits
 
-This is a fork of the [Swoop plugin](https://github.com/swoop-inc/elasticsearch-statsd-plugin) for multi-node clusters on ES 1.x.
+This is a fork of the [Swoop plugin](https://github.com/swoop-inc/elasticsearch-statsd-plugin) for multi-node clusters on ES 1.5.x+.
 
 Heavily inspired by the excellent [metrics library](http://metrics.codahale.com) by Coda Hale and its [GraphiteReporter add-on](http://metrics.codahale.com/manual/graphite/).
 
