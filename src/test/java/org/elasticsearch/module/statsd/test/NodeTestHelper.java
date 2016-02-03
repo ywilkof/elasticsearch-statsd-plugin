@@ -24,6 +24,8 @@ public class NodeTestHelper
 		settingsBuilder.put("metrics.statsd.port", statsdPort);
 		settingsBuilder.put("metrics.statsd.every", refreshInterval);
 
+		settingsBuilder.put("path.conf", "target/test-classes/config");
+
 		LogConfigurator.configure(settingsBuilder.build());
 
 		return NodeBuilder.nodeBuilder().settings(settingsBuilder.build()).node();
