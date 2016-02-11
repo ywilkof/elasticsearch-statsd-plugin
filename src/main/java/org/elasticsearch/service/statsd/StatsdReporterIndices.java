@@ -1,9 +1,5 @@
 package org.elasticsearch.service.statsd;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.elasticsearch.action.admin.indices.stats.*;
 
 public class StatsdReporterIndices extends StatsdReporterIndexStats {
@@ -60,12 +56,12 @@ public class StatsdReporterIndices extends StatsdReporterIndexStats {
 		this.sendRefreshStats(prefix + ".refresh", stats.getRefresh());
 		this.sendFlushStats(prefix + ".flush", stats.getFlush());
 		this.sendWarmerStats(prefix + ".warmer", stats.getWarmer());
-		this.sendFilterCacheStats(prefix + ".filter_cache", stats.getFilterCache());
-		this.sendIdCacheStats(prefix + ".id_cache", stats.getIdCache());
 		this.sendFielddataCacheStats(prefix + ".fielddata", stats.getFieldData());
 		this.sendPercolateStats(prefix + ".percolate", stats.getPercolate());
 		this.sendCompletionStats(prefix + ".completion", stats.getCompletion());
 		this.sendSegmentsStats(prefix + ".segments", stats.getSegments());
+		this.sendQueryCacheStats(prefix + ".query_cache", stats.getQueryCache());
+		this.sendRequestCacheStats(prefix + ".request_cache", stats.getRequestCache());
 		//TODO: getTranslog
 		//TODO: getSuggest
 	}

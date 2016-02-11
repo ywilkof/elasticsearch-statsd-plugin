@@ -1,9 +1,5 @@
 package org.elasticsearch.service.statsd;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.elasticsearch.indices.NodeIndicesStats;
 
 public class StatsdReporterNodeIndicesStats extends StatsdReporterIndexStats {
@@ -27,12 +23,12 @@ public class StatsdReporterNodeIndicesStats extends StatsdReporterIndexStats {
 			this.sendMergeStats(prefix + ".merges", this.nodeIndicesStats.getMerge());
 			this.sendRefreshStats(prefix + ".refresh", this.nodeIndicesStats.getRefresh());
 			this.sendFlushStats(prefix + ".flush", this.nodeIndicesStats.getFlush());
-			this.sendFilterCacheStats(prefix + ".filter_cache", this.nodeIndicesStats.getFilterCache());
-			this.sendIdCacheStats(prefix + ".id_cache", this.nodeIndicesStats.getIdCache());
 			this.sendFielddataCacheStats(prefix + ".fielddata", this.nodeIndicesStats.getFieldData());
 			this.sendPercolateStats(prefix + ".percolate", this.nodeIndicesStats.getPercolate());
 			this.sendCompletionStats(prefix + ".completion", this.nodeIndicesStats.getCompletion());
 			this.sendSegmentsStats(prefix + ".segments", this.nodeIndicesStats.getSegments());
+			this.sendQueryCacheStats(prefix + ".query_cache", this.nodeIndicesStats.getQueryCache());
+			this.sendRequestCacheStats(prefix + ".request_cache", this.nodeIndicesStats.getRequestCache());
 		} catch (Exception e) {
 			this.logException(e);
 		}

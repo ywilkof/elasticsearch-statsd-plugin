@@ -1,13 +1,13 @@
 package org.elasticsearch.plugin.statsd;
 
-import org.elasticsearch.common.collect.Lists;
 import org.elasticsearch.common.component.LifecycleComponent;
-import org.elasticsearch.plugins.AbstractPlugin;
+import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.service.statsd.StatsdService;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
-public class StatsdPlugin extends AbstractPlugin
+public class StatsdPlugin extends Plugin
 {
 
 	public String name()
@@ -20,13 +20,11 @@ public class StatsdPlugin extends AbstractPlugin
 		return "StatsD Monitoring Plugin";
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Collection<Class<? extends LifecycleComponent>> services()
-	{
-		Collection<Class<? extends LifecycleComponent>> services = Lists.newArrayList();
-		services.add(StatsdService.class);
-		return services;
+	public Collection<Class<? extends LifecycleComponent>> nodeServices() {
+		Collection<Class<? extends LifecycleComponent>> list = new ArrayList<>(1);
+		list.add(StatsdService.class);
+		return list;
 	}
 
 }

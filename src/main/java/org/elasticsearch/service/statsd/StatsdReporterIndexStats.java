@@ -1,12 +1,7 @@
 package org.elasticsearch.service.statsd;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import org.elasticsearch.indices.NodeIndicesStats;
-import org.elasticsearch.index.cache.filter.FilterCacheStats;
-import org.elasticsearch.index.cache.id.IdCacheStats;
+import org.elasticsearch.index.cache.query.QueryCacheStats;
+import org.elasticsearch.index.cache.request.RequestCacheStats;
 import org.elasticsearch.index.flush.FlushStats;
 import org.elasticsearch.index.get.GetStats;
 import org.elasticsearch.index.indexing.IndexingStats;
@@ -92,17 +87,6 @@ public abstract class StatsdReporterIndexStats extends StatsdReporter {
 		this.sendGauge(name, "total_time_in_millis", warmerStats.totalTimeInMillis());
 	}
 
-	protected void sendFilterCacheStats(String name, FilterCacheStats filterCacheStats) {
-		if (null == filterCacheStats) return;
-		this.sendGauge(name, "memory_size_in_bytes", filterCacheStats.getMemorySizeInBytes());
-		this.sendGauge(name, "evictions", filterCacheStats.getEvictions());
-	}
-
-	protected void sendIdCacheStats(String name, IdCacheStats idCacheStats) {
-		if (null == idCacheStats) return;
-		this.sendGauge(name, "memory_size_in_bytes", idCacheStats.getMemorySizeInBytes());
-	}
-
 	protected void sendFielddataCacheStats(String name, FieldDataStats fielddataStats) {
 		if (null == fielddataStats) return;
 		this.sendGauge(name, "memory_size_in_bytes", fielddataStats.getMemorySizeInBytes());
@@ -149,5 +133,27 @@ public abstract class StatsdReporterIndexStats extends StatsdReporter {
 		this.sendGauge(name, "fetch_total", searchStatsStats.getFetchCount());
 		this.sendGauge(name, "fetch_time_in_millis", searchStatsStats.getFetchTimeInMillis());
 		this.sendGauge(name, "fetch_current", searchStatsStats.getFetchCurrent());
+	}
+
+	protected void sendQueryCacheStats(String name, QueryCacheStats queryCacheStats) {
+		if (null == queryCacheStats) {
+			return;
+		}
+		this.sendGauge(name, "cache_count", queryCacheStats.getCacheCount());
+		this.sendGauge(name, "hit_count", queryCacheStats.getHitCount());
+		this.sendGauge(name, "miss_count", queryCacheStats.getMissCount());
+		this.sendGauge(name, "cache_size", queryCacheStats.getCacheSize());
+		this.sendGauge(name, "memory_size_in_bytes", queryCacheStats.getMemorySizeInBytes());
+		this.sendGauge(name, "evictions", queryCacheStats.getEvictions());
+	}
+
+	protected void sendRequestCacheStats(String name, RequestCacheStats requestCacheStats) {
+		if (null == requestCacheStats) {
+			return;
+		}
+		this.sendGauge(name, "hit_count", requestCacheStats.getHitCount());
+		this.sendGauge(name, "miss_count", requestCacheStats.getMissCount());
+		this.sendGauge(name, "evictions", requestCacheStats.getEvictions());
+		this.sendGauge(name, "memeory_size_in_bytes", requestCacheStats.getMemorySizeInBytes());
 	}
 }
