@@ -8,10 +8,10 @@ The data sent to the StatsD server tries to be roughly equivalent to the [Indice
 
 ## Installation
 
-To install a prepackaged plugin use the following command:
+To install a prepackaged plugin for ES 2.x+ use the following command:
 
 ```
-bin/plugin -install statsd -url https://github.com/Automattic/elasticsearch-statsd-plugin/releases/download/v0.4.0/elasticsearch-statsd-0.4.0.zip
+bin/plugin install statsd -url https://github.com/Automattic/elasticsearch-statsd-plugin/releases/download/v0.4.0/elasticsearch-statsd-0.4.0.zip
 ```
 
 You can also build your own by doing the following:
