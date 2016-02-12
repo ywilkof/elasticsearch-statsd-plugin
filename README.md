@@ -11,6 +11,7 @@ The data sent to the StatsD server tries to be roughly equivalent to the [Indice
 
 | Elasticsearch  | Plugin         | Release date |
 | -------------- | -------------- | ------------ |
+| 2.0.1          | 2.0.1.0        | Feb 12, 2016 |
 | 2.0.0          | 2.0.0.0        | Feb 12, 2016 |
 | 1.5.x to 1.7.x | 0.4.0          | Feb 3,  2016 |
 | < 1.5.x        | 0.3.3          | Aug 20, 2014 |
@@ -21,7 +22,7 @@ The data sent to the StatsD server tries to be roughly equivalent to the [Indice
 The plugin artifacts are published to Maven Central. To install a prepackaged plugin for ES 2.x+ use the following command:
 
 ```
-bin/plugin install bin/plugin install com.automattic/elasticsearch-statsd/2.0.0.0
+bin/plugin install bin/plugin install com.automattic/elasticsearch-statsd/2.0.1.0
 ```
 
 Change the version to match your ES version. For ES `x.y.z` the version is `x.y.z.0`
