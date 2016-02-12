@@ -5,14 +5,26 @@ Index stats that apply across the entire cluster is only pushed from the elected
 
 The data sent to the StatsD server tries to be roughly equivalent to the [Indices Stats API](http://www.elasticsearch.org/guide/reference/api/admin-indices-stats.html) and [Nodes Stats Api](http://www.elasticsearch.org/guide/reference/api/admin-cluster-nodes-stats.html).
 
+## Versions
 
-## Installation
+![Travis](https://api.travis-ci.org/Automattic/elasticsearch-statsd-plugin.png)
 
-To install a prepackaged plugin for ES 2.x+ use the following command:
+| Elasticsearch  | Plugin         | Release date |
+| -------------- | -------------- | ------------ |
+| 2.0.0          | 2.0.0.0        | Feb 12, 2016 |
+| 1.5.x to 1.7.x | 0.4.0          | Feb 3,  2016 |
+| < 1.5.x        | 0.3.3          | Aug 20, 2014 |
+
+
+## Installation Elasticsearch 2.x
+
+The plugin artifacts are published to Maven Central. To install a prepackaged plugin for ES 2.x+ use the following command:
 
 ```
-bin/plugin install statsd -url https://github.com/Automattic/elasticsearch-statsd-plugin/releases/download/v0.4.0/elasticsearch-statsd-0.4.0.zip
+bin/plugin install bin/plugin install com.automattic/elasticsearch-statsd/2.0.0.0
 ```
+
+Change the version to match your ES version. For ES `x.y.z` the version is `x.y.z.0`
 
 You can also build your own by doing the following:
 
@@ -20,9 +32,15 @@ You can also build your own by doing the following:
 git clone http://github.com/Automattic/elasticsearch-statsd-plugin.git
 cd elasticsearch-statsd-plugin
 mvn package
-bin/plugin -install statsd -url file:///absolute/path/to/current/dir/target/releases/elasticsearch-statsd-0.4.0.zip
+bin/plugin file:///absolute/path/to/current/dir/target/releases/elasticsearch-statsd-2.0.0.0.zip
 ```
 
+
+## Installation Elasticsearch 1.x
+
+```
+bin/plugin -install statsd -url https://github.com/Automattic/elasticsearch-statsd-plugin/releases/download/v0.4.0/elasticsearch-statsd-0.4.0.zip
+```
 
 ## Configuration
 
@@ -41,7 +59,7 @@ Configuration is possible via these parameters:
 Check your elasticsearch log file for a line like this after adding the configuration parameters below to the configuration file
 
 ```
-[2013-02-08 16:01:49,153][INFO ][service.statsd         ] [Sea Urchin] Statsd reporting triggered every [1m] to host [statsd.example.com:8125]
+[INFO ][com.automattic.elasticsearch.statsd.StatsdService] [Ludi] StatsD reporting triggered every [8s] to host [192.168.99.100:32768]
 ```
 
 
@@ -64,7 +82,7 @@ This plugin reports both node level and cluster level stats, the StatsD keys wil
 
 ## Credits
 
-This is a fork of the [Swoop plugin](https://github.com/swoop-inc/elasticsearch-statsd-plugin) for multi-node clusters on ES 1.5.x+.
+This is a fork of the [Swoop plugin](https://github.com/swoop-inc/elasticsearch-statsd-plugin) for multi-node clusters on ES 2.x.
 
 Heavily inspired by the excellent [metrics library](http://metrics.codahale.com) by Coda Hale and its [GraphiteReporter add-on](http://metrics.codahale.com/manual/graphite/).
 
