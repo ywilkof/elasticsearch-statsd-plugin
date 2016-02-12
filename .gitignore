@@ -6,3 +6,6 @@ data/
 .classpath
 .project
 *.swp
+.idea/
+*.iml
+
