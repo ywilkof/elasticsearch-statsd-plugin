@@ -42,8 +42,6 @@ public class StatsdPluginIntegrationTest extends ESIntegTestCase {
 
     @AfterClass
     public static void stopMockStatsdServer() throws Exception {
-        System.out.println("stopping statsdserver");
-//        StatsdService.stopAll();
         System.out.println("Waiting for cleanup");
         Thread.sleep(10000);
         statsdMockServer.close();

@@ -82,6 +82,10 @@ public class StatsdReporterNodeStats extends StatsdReporter {
 
         this.sendGauge(prefix + ".load_average", "1m", osStats.getLoadAverage());
 
+        if (osStats.getCpuPercent() != null) {
+            this.sendGauge(prefix, "cpu_percent", osStats.getCpuPercent());
+        }
+
         if (osStats.getMem() != null) {
             this.sendGauge(prefix + ".mem", "free_in_bytes", osStats.getMem().getFree().bytes());
             this.sendGauge(prefix + ".mem", "used_in_bytes", osStats.getMem().getUsed().bytes());

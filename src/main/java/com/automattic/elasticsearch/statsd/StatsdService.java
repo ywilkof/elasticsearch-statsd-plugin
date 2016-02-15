@@ -3,6 +3,7 @@ package com.automattic.elasticsearch.statsd;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
 import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.SpecialPermission;
 import org.elasticsearch.action.admin.indices.stats.CommonStatsFlags;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.ClusterService;
@@ -17,6 +18,8 @@ import org.elasticsearch.common.util.concurrent.EsExecutors;
 import org.elasticsearch.indices.IndicesService;
 import org.elasticsearch.node.service.NodeService;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
@@ -73,7 +76,19 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
         this.statsdReportFsDetails = settings.getAsBoolean(
                 "metrics.statsd.report.fs_details", false
         );
-        this.statsdClient = new NonBlockingStatsDClient(this.statsdPrefix, this.statsdHost, this.statsdPort);
+
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            // unprivileged code such as scripts do not have SpecialPermission
+            sm.checkPermission(new SpecialPermission());
+        }
+        this.statsdClient = AccessController.doPrivileged(new PrivilegedAction<StatsDClient>() {
+            @Override
+            public StatsDClient run() {
+                return new NonBlockingStatsDClient(StatsdService.this.statsdPrefix, StatsdService.this.statsdHost, StatsdService.this.statsdPort);
+            }
+        });
+
         this.statsdReporterThread = EsExecutors
                 .daemonThreadFactory(this.settings, "statsd_reporter")
                 .newThread(new StatsdReporterThread());

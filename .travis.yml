@@ -1,5 +1,7 @@
 language: java
 
+script: mvn clean verify  -Dtests.security.manager=false
+
 jdk:
   - oraclejdk8
   - oraclejdk7
