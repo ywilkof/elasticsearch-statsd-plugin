@@ -1,5 +1,8 @@
 package com.automattic.elasticsearch.statsd.test;
 
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -15,6 +18,7 @@ public class StatsdMockServer extends Thread {
     public Collection<String> content = new ArrayList<>();
     private DatagramSocket socket;
     private boolean isClosed = false;
+    private final ESLogger logger = Loggers.getLogger(getClass());
 
     public StatsdMockServer(int port) {
         this.port = port;
@@ -40,7 +44,7 @@ public class StatsdMockServer extends Thread {
 
                 String msg;
                 while ((msg = in.readLine()) != null) {
-                    System.out.println("Read from socket: " + msg);
+                    logger.debug("Read from socket: " + msg);
                     content.add(msg.trim());
                 }
                 in.close();
@@ -54,5 +58,9 @@ public class StatsdMockServer extends Thread {
     public void close() throws Exception {
         isClosed = true;
         socket.close();
+    }
+
+    public void resetContents(){
+        this.content = new ArrayList<>();
     }
 }

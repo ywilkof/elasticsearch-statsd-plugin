@@ -1,110 +1,146 @@
 package com.automattic.elasticsearch.statsd.test;
 
+import com.automattic.elasticsearch.plugin.StatsdPlugin;
+import com.automattic.elasticsearch.statsd.StatsdService;
+import com.carrotsearch.randomizedtesting.annotations.ThreadLeakScope;
 import com.google.common.collect.Iterables;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.node.Node;
-import org.junit.After;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.plugins.Plugin;
+import org.elasticsearch.test.ESIntegTestCase;
+import org.elasticsearch.test.InternalTestCluster;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static com.automattic.elasticsearch.statsd.test.NodeTestHelper.createNode;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import static com.google.common.base.Predicates.containsPattern;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-public class StatsdPluginIntegrationTest {
+@ThreadLeakScope(ThreadLeakScope.Scope.NONE)
+@ESIntegTestCase.ClusterScope(maxNumDataNodes = 3, minNumDataNodes = 3, numClientNodes = 0, numDataNodes = 3, transportClientRatio = 1, randomDynamicTemplates = false)
+public class StatsdPluginIntegrationTest extends ESIntegTestCase {
 
     public static final int STATSD_SERVER_PORT = 12345;
 
-    private StatsdMockServer statsdMockServer;
-
-    private String clusterName = RandomStringGenerator.randomAlphabetic(10);
-    private String index = RandomStringGenerator.randomAlphabetic(6).toLowerCase();
+    private String index;
     private String type = RandomStringGenerator.randomAlphabetic(6).toLowerCase();
-    private Node node_1;
-    private Node node_2;
-    private Node node_3;
 
-    @Before
-    public void startStatsdMockServerAndNode() throws Exception {
+    private static StatsdMockServer statsdMockServer;
+
+    @BeforeClass
+    public static void startMockStatsdServer() {
         statsdMockServer = new StatsdMockServer(STATSD_SERVER_PORT);
         statsdMockServer.start();
-        node_1 = createNode(clusterName, 4, STATSD_SERVER_PORT, "1s");
-        node_2 = createNode(clusterName, 4, STATSD_SERVER_PORT, "1s");
-        node_3 = createNode(clusterName, 4, STATSD_SERVER_PORT, "1s");
     }
 
-    @After
-    public void stopStatsdServer() throws Exception {
+    @AfterClass
+    public static void stopMockStatsdServer() throws Exception {
+        System.out.println("stopping statsdserver");
+//        StatsdService.stopAll();
+        System.out.println("Waiting for cleanup");
+        Thread.sleep(10000);
         statsdMockServer.close();
-        if (!node_1.isClosed()) {
-            node_1.close();
-        }
-        if (!node_2.isClosed()) {
-            node_2.close();
-        }
-        if (!node_3.isClosed()) {
-            node_3.close();
-        }
     }
+
+    @Before
+    public void prepareForTest(){
+        index = RandomStringGenerator.randomAlphabetic(6).toLowerCase();
+        logger.info("Creating index " + index);
+        super.createIndex(index);
+        statsdMockServer.resetContents();
+    }
+
+    // Add StatsdPlugin to test cluster
+    @Override
+    protected Collection<Class<? extends Plugin>> nodePlugins() {
+        Collection<Class<? extends Plugin>> plugins = new ArrayList<>();
+        plugins.add(StatsdPlugin.class);
+        return plugins;
+    }
+
+    @Override
+    protected Settings nodeSettings(int nodeOrdinal) {
+        return Settings.builder().put(super.nodeSettings(nodeOrdinal))
+        .put("index.number_of_shards", 4)
+        .put("index.number_of_replicas", 1)
+        .put("metrics.statsd.host", "localhost")
+        .put("metrics.statsd.port", STATSD_SERVER_PORT)
+        .put("metrics.statsd.prefix", "myhost"+nodeOrdinal)
+        .put("metrics.statsd.every", "1s").build();
+    }
+
 
     @Test
     public void testThatIndexingResultsInMonitoring() throws Exception {
-        IndexResponse indexResponse = indexElement(node_1, index, type, "value");
+        IndexResponse indexResponse = indexElement(index, type, "value");
         assertThat(indexResponse.getId(), is(notNullValue()));
 
         //Index some more docs
         this.indexSomeDocs(101);
-
-        Thread.sleep(4000);
+        this.flushAndRefresh(index);
+        Thread.sleep(2000);
 
         ensureValidKeyNames();
-        assertStatsdMetricIsContained("elasticsearch." + clusterName + ".index." + index + ".shard.0.indexing.index_total:51|c");
-        assertStatsdMetricIsContained("elasticsearch." + clusterName + ".index." + index + ".shard.1.indexing.index_total:51|c");
+        assertStatsdMetricIsContained("index." + index + ".total.indexing.index_total:102|g");
         assertStatsdMetricIsContained(".jvm.threads.peak_count:");
     }
 
     @Test
     public void masterFailOverShouldWork() throws Exception {
-        String clusterName = RandomStringGenerator.randomAlphabetic(10);
-        IndexResponse indexResponse = indexElement(node_1, index, type, "value");
+        IndexResponse indexResponse = indexElement(index, type, "value");
         assertThat(indexResponse.getId(), is(notNullValue()));
+        super.flushAndRefresh(index);
 
-        Node origNode = node_1;
-        node_1 = createNode(clusterName, 1, STATSD_SERVER_PORT, "1s");
-        statsdMockServer.content.clear();
-        origNode.close();
-        indexResponse = indexElement(node_1, index, type, "value");
+        InternalTestCluster testCluster = (InternalTestCluster) ESIntegTestCase.cluster();
+        testCluster.stopCurrentMasterNode();
+        testCluster.startNode();
+        Thread.sleep(4000);
+        statsdMockServer.resetContents();
+        System.out.println("stopped master");
+
+        indexResponse = indexElement(index, type, "value");
         assertThat(indexResponse.getId(), is(notNullValue()));
 
         // wait for master fail over and writing to graph reporter
         Thread.sleep(4000);
-        assertStatsdMetricIsContained("elasticsearch." + clusterName + ".index." + index + ".shard.0.indexing.index_total:1|c");
+        assertStatsdMetricIsContained("index."+index+".total.indexing.index_total:2|g");
     }
 
     // the stupid hamcrest matchers have compile erros depending whether they run on java6 or java7, so I rolled my own version
     // yes, I know this sucks... I want power asserts, as usual
     private void assertStatsdMetricIsContained(final String id) {
-        assertThat(Iterables.any(statsdMockServer.content, containsPattern(id)), is(true));
+        // defensive copy as contents are modified by the mock server thread
+        Collection<String> contents = new ArrayList<>(statsdMockServer.content);
+        assertThat(Iterables.any(contents, containsPattern(id)), is(true));
     }
 
     // Make sure no elements with a chars [] are included
     private void ensureValidKeyNames() {
-        assertThat(Iterables.any(statsdMockServer.content, containsPattern("\\.\\.")), is(false));
-        assertThat(Iterables.any(statsdMockServer.content, containsPattern("\\[")), is(false));
-        assertThat(Iterables.any(statsdMockServer.content, containsPattern("\\]")), is(false));
-        assertThat(Iterables.any(statsdMockServer.content, containsPattern("\\(")), is(false));
-        assertThat(Iterables.any(statsdMockServer.content, containsPattern("\\)")), is(false));
+        // defensive copy as contents are modified by the mock server thread
+        Collection<String> contents = new ArrayList<>(statsdMockServer.content);
+        assertThat(Iterables.any(contents, containsPattern("\\.\\.")), is(false));
+        assertThat(Iterables.any(contents, containsPattern("\\[")), is(false));
+        assertThat(Iterables.any(contents, containsPattern("\\]")), is(false));
+        assertThat(Iterables.any(contents, containsPattern("\\(")), is(false));
+        assertThat(Iterables.any(contents, containsPattern("\\)")), is(false));
     }
 
-    private IndexResponse indexElement(Node node, String index, String type, String fieldValue) {
-        return node.client().prepareIndex(index, type).setSource("field", fieldValue).execute().actionGet();
+    private IndexResponse indexElement(String index, String type, String fieldValue) {
+        Map<String, Object> doc = new HashMap<>();
+        doc.put("field", fieldValue);
+        return super.index(index, type, RandomStringGenerator.randomAlphabetic(16), doc);
     }
 
     private void indexSomeDocs(int docs) {
         while (docs > 0) {
-            indexElement(node_1, index, type, "value " + docs);
+            indexElement(index, type, "value " + docs);
             docs--;
         }
     }
