@@ -17,6 +17,8 @@ import org.elasticsearch.common.util.concurrent.EsExecutors;
 import org.elasticsearch.indices.IndicesService;
 import org.elasticsearch.node.service.NodeService;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
 
     private final Client client;
@@ -34,8 +36,8 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
     private final Boolean statsdReportFsDetails;
     private final StatsDClient statsdClient;
 
-    private volatile Thread statsdReporterThread;
-    private volatile boolean closed;
+    private final Thread statsdReporterThread;
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     @Inject
     public StatsdService(Settings settings, Client client, ClusterService clusterService, IndicesService indicesService, NodeService nodeService) {
@@ -72,14 +74,14 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
                 "metrics.statsd.report.fs_details", false
         );
         this.statsdClient = new NonBlockingStatsDClient(this.statsdPrefix, this.statsdHost, this.statsdPort);
+        this.statsdReporterThread = EsExecutors
+                .daemonThreadFactory(this.settings, "statsd_reporter")
+                .newThread(new StatsdReporterThread());
     }
 
     @Override
     protected void doStart() throws ElasticsearchException {
         if (this.statsdHost != null && this.statsdHost.length() > 0) {
-            this.statsdReporterThread = EsExecutors
-                    .daemonThreadFactory(this.settings, "statsd_reporter")
-                    .newThread(new StatsdReporterThread());
             this.statsdReporterThread.start();
             this.logger.info(
                     "StatsD reporting triggered every [{}] to host [{}:{}] with metric prefix [{}]",
@@ -94,25 +96,22 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
 
     @Override
     protected void doStop() throws ElasticsearchException {
-        if (this.closed) {
-            return;
-        }
-        if (this.statsdReporterThread != null) {
-            this.statsdReporterThread.interrupt();
-        }
-        this.closed = true;
-        this.logger.info("StatsD reporter stopped");
+        doClose();
     }
 
     @Override
     protected void doClose() throws ElasticsearchException {
+        if(this.closed.compareAndSet(false, true)) {
+            this.statsdReporterThread.interrupt();
+            this.logger.info("StatsD reporter stopped");
+        }
     }
 
     public class StatsdReporterThread implements Runnable {
 
         @Override
         public void run() {
-            while (!StatsdService.this.closed) {
+            while (!StatsdService.this.closed.get()) {
                 DiscoveryNode node = StatsdService.this.clusterService.localNode();
                 ClusterState state = StatsdService.this.clusterService.state();
                 boolean isClusterStarted = StatsdService.this.clusterService
