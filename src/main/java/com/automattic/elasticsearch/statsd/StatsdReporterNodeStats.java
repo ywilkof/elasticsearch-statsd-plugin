@@ -129,9 +129,11 @@ public class StatsdReporterNodeStats extends StatsdReporter {
     }
 
     private void sendNodeHttpStats(HttpStats httpStats) {
-        String prefix = this.getPrefix("http");
-        this.sendGauge(prefix, "current_open", httpStats.getServerOpen());
-        this.sendGauge(prefix, "total_opened", httpStats.getTotalOpen());
+        if( httpStats != null ) {
+            String prefix = this.getPrefix("http");
+            this.sendGauge(prefix, "current_open", httpStats.getServerOpen());
+            this.sendGauge(prefix, "total_opened", httpStats.getTotalOpen());
+        }
     }
 
     private void sendNodeFsStats(FsInfo fs) {
