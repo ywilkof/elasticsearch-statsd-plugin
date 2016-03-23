@@ -1,7 +1,6 @@
 package com.automattic.elasticsearch.statsd.test;
 
 import com.automattic.elasticsearch.plugin.StatsdPlugin;
-import com.automattic.elasticsearch.statsd.StatsdService;
 import com.carrotsearch.randomizedtesting.annotations.ThreadLeakScope;
 import com.google.common.collect.Iterables;
 import org.elasticsearch.action.index.IndexResponse;
