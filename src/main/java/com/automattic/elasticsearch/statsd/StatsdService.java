@@ -126,75 +126,95 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
 
         @Override
         public void run() {
-            while (!StatsdService.this.closed.get()) {
-                DiscoveryNode node = StatsdService.this.clusterService.localNode();
-                ClusterState state = StatsdService.this.clusterService.state();
-                boolean isClusterStarted = StatsdService.this.clusterService
-                        .lifecycleState()
-                        .equals(Lifecycle.State.STARTED);
+            try {
+                while (!StatsdService.this.closed.get()) {
+                    DiscoveryNode node = StatsdService.this.clusterService.localNode();
+                    ClusterState state = StatsdService.this.clusterService.state();
+                    boolean isClusterStarted = StatsdService.this.clusterService
+                            .lifecycleState()
+                            .equals(Lifecycle.State.STARTED);
 
-                if (node != null && state != null && isClusterStarted) {
-                    String statsdNodeName = StatsdService.this.statsdNodeName;
-                    if (null == statsdNodeName) statsdNodeName = node.getName();
+                    if (node != null && state != null && isClusterStarted) {
+                        String statsdNodeName = StatsdService.this.statsdNodeName;
+                        if (null == statsdNodeName) {
+                            statsdNodeName = node.getName();
+                        }
 
-                    // Report node stats -- runs for all nodes
-                    StatsdReporter nodeStatsReporter = new StatsdReporterNodeStats(
-                            StatsdService.this.nodeService.stats(
-                                    new CommonStatsFlags().clear(), // indices
-                                    true, // os
-                                    true, // process
-                                    true, // jvm
-                                    true, // threadPool
-                                    true, // network
-                                    true, // fs
-                                    true, // transport
-                                    true, // http
-                                    false // circuitBreaker
-                            ),
-                            statsdNodeName,
-                            StatsdService.this.statsdReportFsDetails
-                    );
-                    nodeStatsReporter
-                            .setStatsDClient(StatsdService.this.statsdClient)
-                            .run();
+                        // Report node stats -- runs for all nodes
+                        try {
+                            StatsdReporter nodeStatsReporter = new StatsdReporterNodeStats(
+                                    StatsdService.this.nodeService.stats(
+                                            new CommonStatsFlags().clear(), // indices
+                                            true, // os
+                                            true, // process
+                                            true, // jvm
+                                            true, // threadPool
+                                            true, // network
+                                            true, // fs
+                                            true, // transport
+                                            true, // http
+                                            false // circuitBreaker
+                                    ),
+                                    statsdNodeName,
+                                    StatsdService.this.statsdReportFsDetails
+                            );
+                            nodeStatsReporter
+                                    .setStatsDClient(StatsdService.this.statsdClient)
+                                    .run();
+                        } catch (Exception e) {
+                            StatsdService.this.logger.error("Unable to send node stats", e);
+                        }
 
-                    // Maybe report index stats per node
-                    if (StatsdService.this.statsdReportNodeIndices && node.isDataNode()) {
-                        StatsdReporter nodeIndicesStatsReporter = new StatsdReporterNodeIndicesStats(
-                                StatsdService.this.indicesService.stats(
-                                        false // includePrevious
-                                ),
-                                statsdNodeName
-                        );
-                        nodeIndicesStatsReporter
-                                .setStatsDClient(StatsdService.this.statsdClient)
-                                .run();
+                        // Maybe report index stats per node
+                        if (StatsdService.this.statsdReportNodeIndices && node.isDataNode()) {
+                            try {
+                                StatsdReporter nodeIndicesStatsReporter = new StatsdReporterNodeIndicesStats(
+                                        StatsdService.this.indicesService.stats(
+                                                false // includePrevious
+                                        ),
+                                        statsdNodeName
+                                );
+                                nodeIndicesStatsReporter
+                                        .setStatsDClient(StatsdService.this.statsdClient)
+                                        .run();
+                            } catch (Exception e) {
+                                StatsdService.this.logger.error("Unable to send node indices stats", e);
+                            }
+                        }
+
+                        // Master node is the only one allowed to send cluster wide sums / stats
+                        if (state.nodes().localNodeMaster()) {
+                            try {
+                                StatsdReporter indicesReporter = new StatsdReporterIndices(
+                                        StatsdService.this.client
+                                                .admin()        // AdminClient
+                                                .indices()      // IndicesAdminClient
+                                                .prepareStats() // IndicesStatsRequestBuilder
+                                                .all()          // IndicesStatsRequestBuilder
+                                                .get(),         // IndicesStatsResponse
+                                        StatsdService.this.statsdReportIndices,
+                                        StatsdService.this.statsdReportShards
+                                );
+                                indicesReporter
+                                        .setStatsDClient(StatsdService.this.statsdClient)
+                                        .run();
+                            } catch (Exception e) {
+                                StatsdService.this.logger.error("Unable to send cluster wide stats", e);
+                            }
+                        }
                     }
 
-                    // Master node is the only one allowed to send cluster wide sums / stats
-                    if (state.nodes().localNodeMaster()) {
-                        StatsdReporter indicesReporter = new StatsdReporterIndices(
-                                StatsdService.this.client
-                                        .admin()        // AdminClient
-                                        .indices()      // IndicesAdminClient
-                                        .prepareStats() // IndicesStatsRequestBuilder
-                                        .all()          // IndicesStatsRequestBuilder
-                                        .get(),         // IndicesStatsResponse
-                                StatsdService.this.statsdReportIndices,
-                                StatsdService.this.statsdReportShards
-                        );
-                        indicesReporter
-                                .setStatsDClient(StatsdService.this.statsdClient)
-                                .run();
+                    try {
+                        Thread.sleep(StatsdService.this.statsdRefreshInternal.millis());
+                    } catch (InterruptedException e1) {
+                        continue;
                     }
                 }
-
-                try {
-                    Thread.sleep(StatsdService.this.statsdRefreshInternal.millis());
-                } catch (InterruptedException e1) {
-                    continue;
-                }
+            } catch (Exception e) {
+                StatsdService.this.logger.error("Exception thrown from the event loop of StatsdReporterThread", e);
             }
+
+            StatsdService.this.logger.error("Exiting StatsdReporterThread");
         }
     }
 }
