@@ -6,12 +6,11 @@ import org.elasticsearch.index.engine.SegmentsStats;
 import org.elasticsearch.index.fielddata.FieldDataStats;
 import org.elasticsearch.index.flush.FlushStats;
 import org.elasticsearch.index.get.GetStats;
-import org.elasticsearch.index.indexing.IndexingStats;
 import org.elasticsearch.index.merge.MergeStats;
-import org.elasticsearch.index.percolator.stats.PercolateStats;
 import org.elasticsearch.index.refresh.RefreshStats;
 import org.elasticsearch.index.search.stats.SearchStats;
 import org.elasticsearch.index.shard.DocsStats;
+import org.elasticsearch.index.shard.IndexingStats;
 import org.elasticsearch.index.store.StoreStats;
 import org.elasticsearch.index.warmer.WarmerStats;
 import org.elasticsearch.search.suggest.completion.CompletionStats;
@@ -93,17 +92,6 @@ public abstract class StatsdReporterIndexStats extends StatsdReporter {
         this.sendGauge(name, "evictions", fielddataStats.getEvictions());
     }
 
-    protected void sendPercolateStats(String name, PercolateStats percolateStats) {
-        if (null == percolateStats) return;
-        this.sendGauge(name, "total", percolateStats.getCount());
-        this.sendGauge(name, "time_in_millis", percolateStats.getTimeInMillis());
-        this.sendGauge(name, "current", percolateStats.getCurrent());
-        this.sendGauge(name, "queries", percolateStats.getNumQueries());
-
-        if (percolateStats.getMemorySizeInBytes() != -1)
-            this.sendGauge(name, "memory_size_in_bytes", percolateStats.getMemorySizeInBytes());
-    }
-
     protected void sendCompletionStats(String name, CompletionStats completionStats) {
         if (null == completionStats) return;
         this.sendGauge(name, "size_in_bytes", completionStats.getSizeInBytes());
@@ -118,10 +106,10 @@ public abstract class StatsdReporterIndexStats extends StatsdReporter {
     protected void sendIndexingStatsStats(String name, IndexingStats.Stats indexingStatsStats) {
         if (null == indexingStatsStats) return;
         this.sendGauge(name, "index_total", indexingStatsStats.getIndexCount());
-        this.sendGauge(name, "index_time_in_millis", indexingStatsStats.getIndexTimeInMillis());
+        this.sendGauge(name, "index_time_in_millis", indexingStatsStats.getIndexTime().millis());
         this.sendGauge(name, "index_current", indexingStatsStats.getIndexCount());
         this.sendGauge(name, "delete_total", indexingStatsStats.getDeleteCount());
-        this.sendGauge(name, "delete_time_in_millis", indexingStatsStats.getDeleteTimeInMillis());
+        this.sendGauge(name, "delete_time_in_millis", indexingStatsStats.getDeleteTime().millis());
         this.sendGauge(name, "delete_current", indexingStatsStats.getDeleteCurrent());
     }
 

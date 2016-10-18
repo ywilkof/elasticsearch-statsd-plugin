@@ -60,7 +60,6 @@ public class StatsdReporterIndices extends StatsdReporterIndexStats {
         this.sendFlushStats(prefix + ".flush", stats.getFlush());
         this.sendWarmerStats(prefix + ".warmer", stats.getWarmer());
         this.sendFielddataCacheStats(prefix + ".fielddata", stats.getFieldData());
-        this.sendPercolateStats(prefix + ".percolate", stats.getPercolate());
         this.sendCompletionStats(prefix + ".completion", stats.getCompletion());
         this.sendSegmentsStats(prefix + ".segments", stats.getSegments());
         this.sendQueryCacheStats(prefix + ".query_cache", stats.getQueryCache());

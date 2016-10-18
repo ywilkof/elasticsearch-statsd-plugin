@@ -31,6 +31,24 @@ The data sent to the StatsD server tries to be roughly equivalent to the [Indice
 | < 1.5.x        | 0.3.3          | Aug 20, 2014 |
 
 
+## Installation Elasticsearch 5.x
+
+###Warning The plugin is not thoroughly tested with ES 5.x.
+
+The plugin must be built locally with maven before proceeding. 
+
+```
+git clone http://github.com/Automattic/elasticsearch-statsd-plugin.git
+cd elasticsearch-statsd-plugin
+mvn package -Dtests.security.manager=false -DskipTests
+```
+
+Once we have the artifact, install it with the following command:
+
+```
+./bin/elasticsearch-plugin install file:///Users/anandnalya/github/automattic/elasticsearch-statsd-plugin/target/releases/elasticsearch-statsd-5.0.0-rc1-SNAPSHOT.zip
+```
+
 ## Installation Elasticsearch 2.x
 
 The plugin artifacts are published to Maven Central. To install a prepackaged plugin for ES 2.x+ use the following command:
