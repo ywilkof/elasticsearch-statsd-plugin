@@ -35,6 +35,8 @@ The data sent to the StatsD server tries to be roughly equivalent to the [Indice
 
 ###Warning The plugin is not thoroughly tested with ES 5.x.
 
+**Known Issue**: Integration tests are failing.
+
 The plugin must be built locally with maven before proceeding. 
 
 ```
