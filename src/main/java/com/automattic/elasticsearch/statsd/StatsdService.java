@@ -36,10 +36,11 @@ public class StatsdService extends AbstractLifecycleComponent {
     private final TimeValue statsdRefreshInternal;
     private final String statsdPrefix;
     private final String statsdNodeName;
-    private final Boolean statsdReportNodeIndices;
-    private final Boolean statsdReportIndices;
-    private final Boolean statsdReportShards;
-    private final Boolean statsdReportFsDetails;
+    private final boolean statsdReportNodeIndices;
+    private final boolean statsdReportIndices;
+    private final boolean statsdReportShards;
+    private final boolean statsdReportFsDetails;
+    private final boolean statsdSendHttpStats;
     private final StatsDClient statsdClient;
 
     private final Thread statsdReporterThread;
@@ -61,6 +62,7 @@ public class StatsdService extends AbstractLifecycleComponent {
         this.statsdReportIndices = StatsdPlugin.REPORT_INDICES_S.get(settings);
         this.statsdReportShards = StatsdPlugin.REPORT_SHARDS_S.get(settings);
         this.statsdReportFsDetails = StatsdPlugin.REPORT_FS_DETAILS_S.get(settings);
+        this.statsdSendHttpStats = !StatsdPlugin.TEST_MODE_S.get(settings);
 
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
@@ -128,24 +130,22 @@ public class StatsdService extends AbstractLifecycleComponent {
                                 statsdNodeName = node.getName();
                             }
 
-
-
                             // Report node stats -- runs for all nodes
                             try {
                                 StatsdReporter nodeStatsReporter = new StatsdReporterNodeStats(
                                         StatsdService.this.nodeService.stats(
-                                                new CommonStatsFlags().clear(), // indices
-                                                true, // os
-                                                true, // process
-                                                true, // jvm
-                                                true, // threadPool
-                                                true, // network
-                                                true, // fs
-                                                true, // transport
-                                                true, // http
-                                                false,// circuitBreaker,
-                                                false,// discovery
-                                                false // ingest
+                                                new CommonStatsFlags().clear(),     // indices
+                                                true,                               // os
+                                                true,                               // process
+                                                true,                               // jvm
+                                                true,                               // threadPool
+                                                true,                               // fs
+                                                true,                               // transport
+                                                statsdSendHttpStats,                // http
+                                                true,                               // circuitBreaker
+                                                false,                              // script,
+                                                false,                              // discoveryStats
+                                                false                               // ingest
                                         ),
                                         statsdNodeName,
                                         StatsdService.this.statsdReportFsDetails

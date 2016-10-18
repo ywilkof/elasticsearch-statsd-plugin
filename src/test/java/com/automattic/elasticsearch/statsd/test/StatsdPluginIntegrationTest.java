@@ -75,7 +75,8 @@ public class StatsdPluginIntegrationTest extends ESIntegTestCase {
         .put("metrics.statsd.host", "localhost")
         .put("metrics.statsd.port", STATSD_SERVER_PORT)
         .put("metrics.statsd.prefix", "myhost"+nodeOrdinal)
-        .put("metrics.statsd.every", "1s").build();
+        .put("metrics.statsd.every", "1s")
+        .put("metrics.statsd.test_mode", true).build();
     }
 
 

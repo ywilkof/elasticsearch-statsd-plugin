@@ -24,6 +24,10 @@ public class StatsdPlugin extends Plugin {
     public static final Setting<String> NODE_NAME_S = new Setting<>("metrics.statsd.node_name", "", Function.identity(), Setting.Property.NodeScope);
     public static final Setting<String> PREFIX_S = new Setting<>("metrics.statsd.prefix", "", Function.identity(), Setting.Property.NodeScope);
 
+    // This setting should not be used in production as it will turn off sending http stats. This is just a HACK to
+    // disable http stats when running integrations tests
+    public static final Setting<Boolean> TEST_MODE_S = Setting.boolSetting("metrics.statsd.test_mode", false, Setting.Property.NodeScope);
+
     @Override
     public List<Setting<?>> getSettings() {
         return Arrays.asList(
@@ -35,7 +39,8 @@ public class StatsdPlugin extends Plugin {
                 REPORT_SHARDS_S,
                 REPORT_FS_DETAILS_S,
                 NODE_NAME_S,
-                PREFIX_S
+                PREFIX_S,
+                TEST_MODE_S
         );
     }
 
