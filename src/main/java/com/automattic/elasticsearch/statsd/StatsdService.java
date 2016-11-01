@@ -1,14 +1,16 @@
 package com.automattic.elasticsearch.statsd;
 
+import com.automattic.elasticsearch.plugin.StatsdPlugin;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.SpecialPermission;
 import org.elasticsearch.action.admin.indices.stats.CommonStatsFlags;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.cluster.ClusterService;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.node.DiscoveryNode;
+import org.elasticsearch.cluster.service.ClusterService;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.component.AbstractLifecycleComponent;
 import org.elasticsearch.common.component.Lifecycle;
 import org.elasticsearch.common.inject.Inject;
@@ -20,9 +22,10 @@ import org.elasticsearch.node.service.NodeService;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
+public class StatsdService extends AbstractLifecycleComponent {
 
     private final Client client;
     private final ClusterService clusterService;
@@ -33,10 +36,11 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
     private final TimeValue statsdRefreshInternal;
     private final String statsdPrefix;
     private final String statsdNodeName;
-    private final Boolean statsdReportNodeIndices;
-    private final Boolean statsdReportIndices;
-    private final Boolean statsdReportShards;
-    private final Boolean statsdReportFsDetails;
+    private final boolean statsdReportNodeIndices;
+    private final boolean statsdReportIndices;
+    private final boolean statsdReportShards;
+    private final boolean statsdReportFsDetails;
+    private final boolean statsdSendHttpStats;
     private final StatsDClient statsdClient;
 
     private final Thread statsdReporterThread;
@@ -49,33 +53,16 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
         this.clusterService = clusterService;
         this.indicesService = indicesService;
         this.nodeService = nodeService;
-        this.statsdRefreshInternal = settings.getAsTime(
-                "metrics.statsd.every", TimeValue.timeValueMinutes(1)
-        );
-        this.statsdHost = settings.get(
-                "metrics.statsd.host"
-        );
-        this.statsdPort = settings.getAsInt(
-                "metrics.statsd.port", 8125
-        );
-        this.statsdPrefix = settings.get(
-                "metrics.statsd.prefix", "elasticsearch" + "." + settings.get("cluster.name")
-        );
-        this.statsdNodeName = settings.get(
-                "metrics.statsd.node_name"
-        );
-        this.statsdReportNodeIndices = settings.getAsBoolean(
-                "metrics.statsd.report.node_indices", false
-        );
-        this.statsdReportIndices = settings.getAsBoolean(
-                "metrics.statsd.report.indices", true
-        );
-        this.statsdReportShards = settings.getAsBoolean(
-                "metrics.statsd.report.shards", false
-        );
-        this.statsdReportFsDetails = settings.getAsBoolean(
-                "metrics.statsd.report.fs_details", false
-        );
+        this.statsdRefreshInternal = StatsdPlugin.EVERY_S.get(settings);
+        this.statsdHost = StatsdPlugin.HOST_S.get(settings);
+        this.statsdPort = StatsdPlugin.PORT_S.get(settings);
+        this.statsdPrefix = Arrays.asList(StatsdPlugin.PREFIX_S.get(settings), "elasticsearch" + "." + settings.get("cluster.name")).stream().filter(s -> s.length() > 0).findFirst().get();
+        this.statsdNodeName = StatsdPlugin.NODE_NAME_S.get(settings);
+        this.statsdReportNodeIndices = StatsdPlugin.REPORT_NODE_INDICES_S.get(settings);
+        this.statsdReportIndices = StatsdPlugin.REPORT_INDICES_S.get(settings);
+        this.statsdReportShards = StatsdPlugin.REPORT_SHARDS_S.get(settings);
+        this.statsdReportFsDetails = StatsdPlugin.REPORT_FS_DETAILS_S.get(settings);
+        this.statsdSendHttpStats = !StatsdPlugin.TEST_MODE_S.get(settings);
 
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
@@ -128,81 +115,88 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
         public void run() {
             try {
                 while (!StatsdService.this.closed.get()) {
-                    DiscoveryNode node = StatsdService.this.clusterService.localNode();
                     ClusterState state = StatsdService.this.clusterService.state();
                     boolean isClusterStarted = StatsdService.this.clusterService
                             .lifecycleState()
                             .equals(Lifecycle.State.STARTED);
 
-                    if (node != null && state != null && isClusterStarted) {
-                        String statsdNodeName = StatsdService.this.statsdNodeName;
-                        if (null == statsdNodeName) {
-                            statsdNodeName = node.getName();
-                        }
 
-                        // Report node stats -- runs for all nodes
-                        try {
-                            StatsdReporter nodeStatsReporter = new StatsdReporterNodeStats(
-                                    StatsdService.this.nodeService.stats(
-                                            new CommonStatsFlags().clear(), // indices
-                                            true, // os
-                                            true, // process
-                                            true, // jvm
-                                            true, // threadPool
-                                            true, // network
-                                            true, // fs
-                                            true, // transport
-                                            true, // http
-                                            false // circuitBreaker
-                                    ),
-                                    statsdNodeName,
-                                    StatsdService.this.statsdReportFsDetails
-                            );
-                            nodeStatsReporter
-                                    .setStatsDClient(StatsdService.this.statsdClient)
-                                    .run();
-                        } catch (Exception e) {
-                            StatsdService.this.logger.error("Unable to send node stats", e);
-                        }
+                    if(isClusterStarted) {
+                        DiscoveryNode node = StatsdService.this.clusterService.localNode();
 
-                        // Maybe report index stats per node
-                        if (StatsdService.this.statsdReportNodeIndices && node.isDataNode()) {
-                            try {
-                                StatsdReporter nodeIndicesStatsReporter = new StatsdReporterNodeIndicesStats(
-                                        StatsdService.this.indicesService.stats(
-                                                false // includePrevious
-                                        ),
-                                        statsdNodeName
-                                );
-                                nodeIndicesStatsReporter
-                                        .setStatsDClient(StatsdService.this.statsdClient)
-                                        .run();
-                            } catch (Exception e) {
-                                StatsdService.this.logger.error("Unable to send node indices stats", e);
+                        if (node != null && state != null) {
+                            String statsdNodeName = StatsdService.this.statsdNodeName;
+                            if (Strings.isNullOrEmpty(statsdNodeName)) {
+                                statsdNodeName = node.getName();
                             }
-                        }
 
-                        // Master node is the only one allowed to send cluster wide sums / stats
-                        if (state.nodes().localNodeMaster()) {
+                            // Report node stats -- runs for all nodes
                             try {
-                                StatsdReporter indicesReporter = new StatsdReporterIndices(
-                                        StatsdService.this.client
-                                                .admin()        // AdminClient
-                                                .indices()      // IndicesAdminClient
-                                                .prepareStats() // IndicesStatsRequestBuilder
-                                                .all()          // IndicesStatsRequestBuilder
-                                                .get(),         // IndicesStatsResponse
-                                        StatsdService.this.statsdReportIndices,
-                                        StatsdService.this.statsdReportShards
+                                StatsdReporter nodeStatsReporter = new StatsdReporterNodeStats(
+                                        StatsdService.this.nodeService.stats(
+                                                new CommonStatsFlags().clear(),     // indices
+                                                true,                               // os
+                                                true,                               // process
+                                                true,                               // jvm
+                                                true,                               // threadPool
+                                                true,                               // fs
+                                                true,                               // transport
+                                                statsdSendHttpStats,                // http
+                                                true,                               // circuitBreaker
+                                                false,                              // script,
+                                                false,                              // discoveryStats
+                                                false                               // ingest
+                                        ),
+                                        statsdNodeName,
+                                        StatsdService.this.statsdReportFsDetails
                                 );
-                                indicesReporter
+                                nodeStatsReporter
                                         .setStatsDClient(StatsdService.this.statsdClient)
                                         .run();
                             } catch (Exception e) {
-                                StatsdService.this.logger.error("Unable to send cluster wide stats", e);
+                                StatsdService.this.logger.error("Unable to send node stats", e);
+                            }
+
+                            // Maybe report index stats per node
+                            if (StatsdService.this.statsdReportNodeIndices && node.isDataNode()) {
+                                try {
+                                    StatsdReporter nodeIndicesStatsReporter = new StatsdReporterNodeIndicesStats(
+                                            StatsdService.this.indicesService.stats(
+                                                    false // includePrevious
+                                            ),
+                                            statsdNodeName
+                                    );
+                                    nodeIndicesStatsReporter
+                                            .setStatsDClient(StatsdService.this.statsdClient)
+                                            .run();
+                                } catch (Exception e) {
+                                    StatsdService.this.logger.error("Unable to send node indices stats", e);
+                                }
+                            }
+
+                            // Master node is the only one allowed to send cluster wide sums / stats
+                            if (state.nodes().isLocalNodeElectedMaster()) {
+                                try {
+                                    StatsdReporter indicesReporter = new StatsdReporterIndices(
+                                            StatsdService.this.client
+                                                    .admin()        // AdminClient
+                                                    .indices()      // IndicesAdminClient
+                                                    .prepareStats() // IndicesStatsRequestBuilder
+                                                    .all()          // IndicesStatsRequestBuilder
+                                                    .get(),         // IndicesStatsResponse
+                                            StatsdService.this.statsdReportIndices,
+                                            StatsdService.this.statsdReportShards
+                                    );
+                                    indicesReporter
+                                            .setStatsDClient(StatsdService.this.statsdClient)
+                                            .run();
+                                } catch (Exception e) {
+                                    StatsdService.this.logger.error("Unable to send cluster wide stats", e);
+                                }
                             }
                         }
                     }
+
 
                     try {
                         Thread.sleep(StatsdService.this.statsdRefreshInternal.millis());

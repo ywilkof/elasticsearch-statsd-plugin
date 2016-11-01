@@ -1,6 +1,6 @@
 package com.automattic.elasticsearch.statsd.test;
 
-import org.elasticsearch.common.logging.ESLogger;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.logging.Loggers;
 
 import java.io.BufferedReader;
@@ -18,7 +18,7 @@ public class StatsdMockServer extends Thread {
     public Collection<String> content = new ArrayList<>();
     private DatagramSocket socket;
     private boolean isClosed = false;
-    private final ESLogger logger = Loggers.getLogger(getClass());
+    private final Logger logger = Loggers.getLogger(getClass());
 
     public StatsdMockServer(int port) {
         this.port = port;

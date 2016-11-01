@@ -57,9 +57,9 @@ public class StatsdReporterNodeStats extends StatsdReporter {
         String prefix = this.getPrefix("transport");
         this.sendGauge(prefix, "server_open", transportStats.serverOpen());
         this.sendGauge(prefix, "rx_count", transportStats.rxCount());
-        this.sendGauge(prefix, "rx_size_in_bytes", transportStats.rxSize().bytes());
+        this.sendGauge(prefix, "rx_size_in_bytes", transportStats.rxSize().getBytes());
         this.sendGauge(prefix, "tx_count", transportStats.txCount());
-        this.sendGauge(prefix, "tx_size_in_bytes", transportStats.txSize().bytes());
+        this.sendGauge(prefix, "tx_size_in_bytes", transportStats.txSize().getBytes());
     }
 
     private void sendNodeProcessStats(ProcessStats processStats) {
@@ -73,29 +73,29 @@ public class StatsdReporterNodeStats extends StatsdReporter {
         }
 
         if (processStats.getMem() != null) {
-            this.sendGauge(prefix + ".mem", "total_virtual_in_bytes", processStats.getMem().getTotalVirtual().bytes());
+            this.sendGauge(prefix + ".mem", "total_virtual_in_bytes", processStats.getMem().getTotalVirtual().getBytes());
         }
     }
 
     private void sendNodeOsStats(OsStats osStats) {
         String prefix = this.getPrefix("os");
 
-        this.sendGauge(prefix + ".load_average", "1m", osStats.getLoadAverage());
+        this.sendGauge(prefix + ".load_average", "1m", osStats.getCpu().getLoadAverage()[0]);
+        this.sendGauge(prefix + ".load_average", "5m", osStats.getCpu().getLoadAverage()[1]);
+        this.sendGauge(prefix + ".load_average", "15m", osStats.getCpu().getLoadAverage()[2]);
 
-        if (osStats.getCpuPercent() != null) {
-            this.sendGauge(prefix, "cpu_percent", osStats.getCpuPercent());
-        }
+        this.sendGauge(prefix, "cpu_percent", osStats.getCpu().getPercent());
 
         if (osStats.getMem() != null) {
-            this.sendGauge(prefix + ".mem", "free_in_bytes", osStats.getMem().getFree().bytes());
-            this.sendGauge(prefix + ".mem", "used_in_bytes", osStats.getMem().getUsed().bytes());
+            this.sendGauge(prefix + ".mem", "free_in_bytes", osStats.getMem().getFree().getBytes());
+            this.sendGauge(prefix + ".mem", "used_in_bytes", osStats.getMem().getUsed().getBytes());
             this.sendGauge(prefix + ".mem", "free_percent", osStats.getMem().getFreePercent());
             this.sendGauge(prefix + ".mem", "used_percent", osStats.getMem().getUsedPercent());
         }
 
         if (osStats.getSwap() != null) {
-            this.sendGauge(prefix + ".swap", "free_in_bytes", osStats.getSwap().getFree().bytes());
-            this.sendGauge(prefix + ".swap", "used_in_bytes", osStats.getSwap().getUsed().bytes());
+            this.sendGauge(prefix + ".swap", "free_in_bytes", osStats.getSwap().getFree().getBytes());
+            this.sendGauge(prefix + ".swap", "used_in_bytes", osStats.getSwap().getUsed().getBytes());
         }
     }
 
@@ -104,17 +104,17 @@ public class StatsdReporterNodeStats extends StatsdReporter {
 
         // mem
         this.sendGauge(prefix + ".mem", "heap_used_percent", jvmStats.getMem().getHeapUsedPercent());
-        this.sendGauge(prefix + ".mem", "heap_used_in_bytes", jvmStats.getMem().getHeapUsed().bytes());
-        this.sendGauge(prefix + ".mem", "heap_committed_in_bytes", jvmStats.getMem().getHeapCommitted().bytes());
-        this.sendGauge(prefix + ".mem", "non_heap_used_in_bytes", jvmStats.getMem().getNonHeapUsed().bytes());
-        this.sendGauge(prefix + ".mem", "non_heap_committed_in_bytes", jvmStats.getMem().getNonHeapCommitted().bytes());
+        this.sendGauge(prefix + ".mem", "heap_used_in_bytes", jvmStats.getMem().getHeapUsed().getBytes());
+        this.sendGauge(prefix + ".mem", "heap_committed_in_bytes", jvmStats.getMem().getHeapCommitted().getBytes());
+        this.sendGauge(prefix + ".mem", "non_heap_used_in_bytes", jvmStats.getMem().getNonHeapUsed().getBytes());
+        this.sendGauge(prefix + ".mem", "non_heap_committed_in_bytes", jvmStats.getMem().getNonHeapCommitted().getBytes());
         for (JvmStats.MemoryPool memoryPool : jvmStats.getMem()) {
             String memoryPoolType = prefix + ".mem.pools." + memoryPool.getName();
 
-            this.sendGauge(memoryPoolType, "max_in_bytes", memoryPool.getMax().bytes());
-            this.sendGauge(memoryPoolType, "used_in_bytes", memoryPool.getUsed().bytes());
-            this.sendGauge(memoryPoolType, "peak_used_in_bytes", memoryPool.getPeakUsed().bytes());
-            this.sendGauge(memoryPoolType, "peak_max_in_bytes", memoryPool.getPeakMax().bytes());
+            this.sendGauge(memoryPoolType, "max_in_bytes", memoryPool.getMax().getBytes());
+            this.sendGauge(memoryPoolType, "used_in_bytes", memoryPool.getUsed().getBytes());
+            this.sendGauge(memoryPoolType, "peak_used_in_bytes", memoryPool.getPeakUsed().getBytes());
+            this.sendGauge(memoryPoolType, "peak_max_in_bytes", memoryPool.getPeakMax().getBytes());
         }
 
         // threads
@@ -163,12 +163,12 @@ public class StatsdReporterNodeStats extends StatsdReporter {
         if (info.getMount() != null)
             prefixAppend += "." + info.getMount();
 
-        if (info.getAvailable().bytes() != -1)
-            this.sendGauge(prefix + prefixAppend, "available_in_bytes", info.getAvailable().bytes());
-        if (info.getTotal().bytes() != -1)
-            this.sendGauge(prefix + prefixAppend, "total_in_bytes", info.getTotal().bytes());
-        if (info.getFree().bytes() != -1)
-            this.sendGauge(prefix + prefixAppend, "free_in_bytes", info.getFree().bytes());
+        if (info.getAvailable().getBytes() != -1)
+            this.sendGauge(prefix + prefixAppend, "available_in_bytes", info.getAvailable().getBytes());
+        if (info.getTotal().getBytes() != -1)
+            this.sendGauge(prefix + prefixAppend, "total_in_bytes", info.getTotal().getBytes());
+        if (info.getFree().getBytes() != -1)
+            this.sendGauge(prefix + prefixAppend, "free_in_bytes", info.getFree().getBytes());
     }
 
     private String getPrefix(String prefix) {

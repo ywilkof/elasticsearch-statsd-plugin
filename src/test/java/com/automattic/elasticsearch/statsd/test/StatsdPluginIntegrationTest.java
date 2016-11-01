@@ -19,11 +19,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.google.common.base.Predicates.containsPattern;
+import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_REPLICAS;
+import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_SHARDS;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
 @ThreadLeakScope(ThreadLeakScope.Scope.NONE)
-@ESIntegTestCase.ClusterScope(maxNumDataNodes = 3, minNumDataNodes = 3, numClientNodes = 0, numDataNodes = 3, transportClientRatio = 1, randomDynamicTemplates = false)
+@ESIntegTestCase.ClusterScope(maxNumDataNodes = 3, minNumDataNodes = 3, numClientNodes = 0, numDataNodes = 3, transportClientRatio = -1, randomDynamicTemplates = false)
 public class StatsdPluginIntegrationTest extends ESIntegTestCase {
 
     public static final int STATSD_SERVER_PORT = 12345;
@@ -46,6 +48,11 @@ public class StatsdPluginIntegrationTest extends ESIntegTestCase {
         statsdMockServer.close();
     }
 
+    @Override
+    public Settings indexSettings() {
+        return Settings.builder().put(super.indexSettings()).put(SETTING_NUMBER_OF_SHARDS, 4).put(SETTING_NUMBER_OF_REPLICAS, 1).build();
+    }
+
     @Before
     public void prepareForTest(){
         index = RandomStringGenerator.randomAlphabetic(6).toLowerCase();
@@ -65,12 +72,11 @@ public class StatsdPluginIntegrationTest extends ESIntegTestCase {
     @Override
     protected Settings nodeSettings(int nodeOrdinal) {
         return Settings.builder().put(super.nodeSettings(nodeOrdinal))
-        .put("index.number_of_shards", 4)
-        .put("index.number_of_replicas", 1)
         .put("metrics.statsd.host", "localhost")
         .put("metrics.statsd.port", STATSD_SERVER_PORT)
         .put("metrics.statsd.prefix", "myhost"+nodeOrdinal)
-        .put("metrics.statsd.every", "1s").build();
+        .put("metrics.statsd.every", "1s")
+        .put("metrics.statsd.test_mode", true).build();
     }
 
 

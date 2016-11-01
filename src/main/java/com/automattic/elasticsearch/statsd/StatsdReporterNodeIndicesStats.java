@@ -24,7 +24,6 @@ public class StatsdReporterNodeIndicesStats extends StatsdReporterIndexStats {
             this.sendRefreshStats(prefix + ".refresh", this.nodeIndicesStats.getRefresh());
             this.sendFlushStats(prefix + ".flush", this.nodeIndicesStats.getFlush());
             this.sendFielddataCacheStats(prefix + ".fielddata", this.nodeIndicesStats.getFieldData());
-            this.sendPercolateStats(prefix + ".percolate", this.nodeIndicesStats.getPercolate());
             this.sendCompletionStats(prefix + ".completion", this.nodeIndicesStats.getCompletion());
             this.sendSegmentsStats(prefix + ".segments", this.nodeIndicesStats.getSegments());
             this.sendQueryCacheStats(prefix + ".query_cache", this.nodeIndicesStats.getQueryCache());
