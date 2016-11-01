@@ -34,10 +34,17 @@ The data sent to the StatsD server tries to be roughly equivalent to the [Indice
 
 ## Installation Elasticsearch 5.x
 
-The plugin artifacts are published to Maven Central. To install a prepackaged plugin for ES 5.x+ use the following command:
+The plugin artifacts are published to Maven Central and Github. To install a prepackaged plugin for ES 5.x+ use the following command:
+
+From Github:
 
 ```
-./bin/elasticsearch-plugin  install http://repo1.maven.org/maven2/com/automattic/elasticsearch-statsd/5.0.0.0/elasticsearch-statsd-5.0.0.0.zip
+./bin/elasticsearch-plugin install https://github.com/Automattic/elasticsearch-statsd-plugin/releases/download/5.0.0.0/elasticsearch-statsd-5.0.0.zip
+```
+
+From Maven Central:
+```
+./bin/elasticsearch-plugin install http://repo1.maven.org/maven2/com/automattic/elasticsearch-statsd/5.0.0.0/elasticsearch-statsd-5.0.0.0.zip
 ```
 
 Change the version to match your ES version. For ES `x.y.z` the version is `x.y.z.0`
