@@ -60,7 +60,7 @@ mvn package -Dtests.security.manager=false
 Once we have the artifact, install it with the following command:
 
 ```
-./bin/elasticsearch-plugin install file:///Users/anandnalya/github/automattic/elasticsearch-statsd-plugin/target/releases/elasticsearch-statsd-5.0.0.zip
+./bin/elasticsearch-plugin install file:///Users/anandnalya/github/automattic/elasticsearch-statsd-plugin/target/releases/elasticsearch-statsd-5.0.0.0.zip
 ```
 
 ## Installation Elasticsearch 2.x
