@@ -10,6 +10,7 @@ The data sent to the StatsD server tries to be roughly equivalent to the [Indice
 
 | Elasticsearch  | Plugin         | Release date |
 | -------------- | -------------- | ------------ |
+| 5.0.0          | 5.0.0.0        | Nov 1,  2016 |
 | 2.4.1          | 2.4.1.0        | Sep 29, 2016 |
 | 2.4.0          | 2.4.0.0        | Sep 7,  2016 |
 | 2.3.5          | 2.3.5.0        | Aug 24, 2016 |
@@ -33,25 +34,31 @@ The data sent to the StatsD server tries to be roughly equivalent to the [Indice
 
 ## Installation Elasticsearch 5.x
 
-###Warning The plugin is not thoroughly tested with ES 5.x.
+The plugin artifacts are published to Maven Central. To install a prepackaged plugin for ES 5.x+ use the following command:
 
-The plugin must be built locally with maven before proceeding. 
+```
+./bin/elasticsearch-plugin  install http://repo1.maven.org/maven2/com/automattic/elasticsearch-statsd/5.0.0.0/elasticsearch-statsd-5.0.0.0.zip
+```
+
+Change the version to match your ES version. For ES `x.y.z` the version is `x.y.z.0`
+
+You can also build your own by doing the following:
 
 ```
 git clone http://github.com/Automattic/elasticsearch-statsd-plugin.git
 cd elasticsearch-statsd-plugin
-mvn package -Dtests.security.manager=false -DskipTests
+mvn package -Dtests.security.manager=false
 ```
 
 Once we have the artifact, install it with the following command:
 
 ```
-./bin/elasticsearch-plugin install file:///Users/anandnalya/github/automattic/elasticsearch-statsd-plugin/target/releases/elasticsearch-statsd-5.0.0-rc1-SNAPSHOT.zip
+./bin/elasticsearch-plugin install file:///Users/anandnalya/github/automattic/elasticsearch-statsd-plugin/target/releases/elasticsearch-statsd-5.0.0.zip
 ```
 
 ## Installation Elasticsearch 2.x
 
-The plugin artifacts are published to Maven Central. To install a prepackaged plugin for ES 2.x+ use the following command:
+The plugin artifacts are published to Maven Central. To install a prepackaged plugin for ES 2.x use the following command:
 
 ```
 bin/plugin install com.automattic/elasticsearch-statsd/2.4.1.0
@@ -79,7 +86,7 @@ bin/plugin -install statsd -url https://github.com/Automattic/elasticsearch-stat
 
 Configuration is possible via these parameters:
 
-* `metrics.statsd.host`: The statsd host to connect to (default: none)
+* `metrics.statsd.host`: The statsd host to connect to (default: localhost)
 * `metrics.statsd.port`: The port to connect to (default: 8125)
 * `metrics.statsd.every`: The interval to push data (default: 1m)
 * `metrics.statsd.prefix`: The metric prefix that's sent with metric names (default: elasticsearch.your_cluster_name)
