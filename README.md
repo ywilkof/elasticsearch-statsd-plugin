@@ -39,7 +39,7 @@ The plugin artifacts are published to Maven Central and Github. To install a pre
 From Github:
 
 ```
-./bin/elasticsearch-plugin install https://github.com/Automattic/elasticsearch-statsd-plugin/releases/download/5.0.0.0/elasticsearch-statsd-5.0.0.zip
+./bin/elasticsearch-plugin install https://github.com/Automattic/elasticsearch-statsd-plugin/releases/download/5.0.0.0/elasticsearch-statsd-5.0.0.0.zip
 ```
 
 From Maven Central:
