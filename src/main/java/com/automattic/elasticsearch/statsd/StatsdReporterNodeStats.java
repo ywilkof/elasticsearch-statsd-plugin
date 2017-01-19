@@ -97,6 +97,18 @@ public class StatsdReporterNodeStats extends StatsdReporter {
             this.sendGauge(prefix + ".swap", "free_in_bytes", osStats.getSwap().getFree().getBytes());
             this.sendGauge(prefix + ".swap", "used_in_bytes", osStats.getSwap().getUsed().getBytes());
         }
+
+        if (osStats.getCgroup() != null) {
+            this.sendGauge(prefix + ".cgroup", "cpuacct.usage", osStats.getCgroup().getCpuAcctUsageNanos());
+            this.sendGauge(prefix + ".cgroup", "cpu.cfs_period_micros", osStats.getCgroup().getCpuCfsPeriodMicros());
+            this.sendGauge(prefix + ".cgroup", "cpu.cfs_quota_micros", osStats.getCgroup().getCpuCfsQuotaMicros());
+
+            if (osStats.getCgroup().getCpuStat() != null) {
+                this.sendGauge(prefix + ".cgroup.cpu.stat", "number_of_elapsed_periods", osStats.getCgroup().getCpuStat().getNumberOfElapsedPeriods());
+                this.sendGauge(prefix + ".cgroup.cpu.stat", "number_of_times_throttled", osStats.getCgroup().getCpuStat().getNumberOfTimesThrottled());
+                this.sendGauge(prefix + ".cgroup.cpu.stat", "time_throttled_nanos", osStats.getCgroup().getCpuStat().getTimeThrottledNanos());
+            }
+        }
     }
 
     private void sendNodeJvmStats(JvmStats jvmStats) {
