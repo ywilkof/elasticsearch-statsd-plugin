@@ -18,7 +18,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.util.concurrent.EsExecutors;
 import org.elasticsearch.indices.IndicesService;
-import org.elasticsearch.node.service.NodeService;
+import org.elasticsearch.node.NodeService;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
