@@ -2,7 +2,7 @@
 This plugin creates a little push service, which regularly updates a StatsD host with indices stats and nodes stats.
 Index stats that apply across the entire cluster is only pushed from the elected master which node level stats are pushed from every node.
 
-The data sent to the StatsD server tries to be roughly equivalent to the [Indices Stats API](http://www.elasticsearch.org/guide/reference/api/admin-indices-stats.html) and [Nodes Stats Api](http://www.elasticsearch.org/guide/reference/api/admin-cluster-nodes-stats.html).
+The data sent to the StatsD server tries to be roughly equivalent to the [Indices Stats API](https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-stats.html) and [Nodes Stats Api](https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-stats.html).
 
 ## Versions
 
