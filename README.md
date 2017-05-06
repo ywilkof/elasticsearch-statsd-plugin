@@ -13,7 +13,7 @@ The data sent to the StatsD server tries to be roughly equivalent to the [Indice
 | 2.4.4          | 2.4.4.0        | Jan 19, 2017 |
 | 2.4.3          | 2.4.3.0        | Jan 4,  2017 |
 | 2.4.2          | 2.4.2.0        | Jan 4,  2017 |
-| 2.4.1          | 2.4.1.0        | Sep 29, 2016 |
+| 2.4.1          | 2.4.1.1        | May 7,  2017 |
 | 2.4.0          | 2.4.0.1        | May 7,  2017 |
 | 2.3.5          | 2.3.5.0        | Aug 24, 2016 |
 | 2.3.4          | 2.3.4.0        | Jul 22, 2016 |
@@ -39,7 +39,7 @@ The data sent to the StatsD server tries to be roughly equivalent to the [Indice
 The plugin artifacts are published to Maven Central. To install a prepackaged plugin for ES 2.x+ use the following command:
 
 ```
-bin/plugin install com.automattic/elasticsearch-statsd/2.4.0.1
+bin/plugin install com.automattic/elasticsearch-statsd/2.4.1.1
 ```
 
 Change the version to match your ES version. For ES `x.y.z` the version is `x.y.z.0`
@@ -50,7 +50,7 @@ You can also build your own by doing the following:
 git clone http://github.com/Automattic/elasticsearch-statsd-plugin.git
 cd elasticsearch-statsd-plugin
 mvn package -Dtests.security.manager=false
-bin/plugin file:///absolute/path/to/current/dir/target/releases/elasticsearch-statsd-2.4.0.1.zip
+bin/plugin file:///absolute/path/to/current/dir/target/releases/elasticsearch-statsd-2.4.1.1.zip
 ```
 
 
