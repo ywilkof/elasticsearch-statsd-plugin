@@ -51,6 +51,7 @@ public abstract class StatsdReporterIndexStats extends StatsdReporter {
 
     protected void sendSearchStats(String name, SearchStats searchStats) {
         if (null == searchStats) return;
+        this.sendGauge(name, "open_contexts", searchStats.getOpenContexts());
         SearchStats.Stats totalSearchStats = searchStats.getTotal();
         this.sendSearchStatsStats(name, totalSearchStats);
 
