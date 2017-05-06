@@ -11,7 +11,7 @@ The data sent to the StatsD server tries to be roughly equivalent to the [Indice
 | Elasticsearch  | Plugin         | Release date |
 | -------------- | -------------- | ------------ |
 | 5.2.2          | 5.2.2.0        | Mar 6,  2017 |
-| 5.2.1          | 5.2.1.0        | Feb 23, 2017 |
+| 5.2.1          | 5.2.1.1        | May 6,  2017 |
 | 5.2.0          | 5.2.0.1        | May 6,  2017 |
 | 5.1.2          | 5.1.2.0        | Jan 19, 2017 |
 | 5.1.1          | 5.1.1.0        | Jan 19, 2017 |
@@ -49,12 +49,12 @@ The plugin artifacts are published to Maven Central and Github. To install a pre
 From Github:
 
 ```
-./bin/elasticsearch-plugin install https://github.com/Automattic/elasticsearch-statsd-plugin/releases/download/5.2.0.1/elasticsearch-statsd-5.2.0.1.zip
+./bin/elasticsearch-plugin install https://github.com/Automattic/elasticsearch-statsd-plugin/releases/download/5.2.1.1/elasticsearch-statsd-5.2.1.1.zip
 ```
 
 From Maven Central:
 ```
-./bin/elasticsearch-plugin install http://repo1.maven.org/maven2/com/automattic/elasticsearch-statsd/5.2.0.1/elasticsearch-statsd-5.2.0.1.zip
+./bin/elasticsearch-plugin install http://repo1.maven.org/maven2/com/automattic/elasticsearch-statsd/5.2.1.1/elasticsearch-statsd-5.2.1.1.zip
 ```
 
 Change the version to match your ES version. For ES `x.y.z` the version is `x.y.z.0`
@@ -70,7 +70,7 @@ mvn package -Dtests.security.manager=false
 Once we have the artifact, install it with the following command:
 
 ```
-./bin/elasticsearch-plugin install file:///Users/anandnalya/github/automattic/elasticsearch-statsd-plugin/target/releases/elasticsearch-statsd-5.2.0.1.zip
+./bin/elasticsearch-plugin install file:///Users/anandnalya/github/automattic/elasticsearch-statsd-plugin/target/releases/elasticsearch-statsd-5.2.1.1.zip
 ```
 
 ## Installation Elasticsearch 2.x
