@@ -32,11 +32,11 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
     private final Integer statsdPort;
     private final TimeValue statsdRefreshInternal;
     private final String statsdPrefix;
-    private final String statsdNodeName;
     private final Boolean statsdReportNodeIndices;
     private final Boolean statsdReportIndices;
     private final Boolean statsdReportShards;
     private final Boolean statsdReportFsDetails;
+    private final String[] tags;
     private final StatsDClient statsdClient;
 
     private final Thread statsdReporterThread;
@@ -61,9 +61,6 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
         this.statsdPrefix = settings.get(
                 "metrics.statsd.prefix", "elasticsearch" + "." + settings.get("cluster.name")
         );
-        this.statsdNodeName = settings.get(
-                "metrics.statsd.node_name"
-        );
         this.statsdReportNodeIndices = settings.getAsBoolean(
                 "metrics.statsd.report.node_indices", false
         );
@@ -76,6 +73,9 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
         this.statsdReportFsDetails = settings.getAsBoolean(
                 "metrics.statsd.report.fs_details", false
         );
+        this.tags = settings.getAsArray(
+                "metrics.statsd.report.tags", new String[] {}
+        );
 
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
@@ -85,7 +85,12 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
         this.statsdClient = AccessController.doPrivileged(new PrivilegedAction<StatsDClient>() {
             @Override
             public StatsDClient run() {
-                return new NonBlockingStatsDClient(StatsdService.this.statsdPrefix, StatsdService.this.statsdHost, StatsdService.this.statsdPort);
+                return new NonBlockingStatsDClient(
+                        StatsdService.this.statsdPrefix,
+                        StatsdService.this.statsdHost,
+                        StatsdService.this.statsdPort,
+                        StatsdService.this.tags
+                    );
             }
         });
 
@@ -135,10 +140,6 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
                             .equals(Lifecycle.State.STARTED);
 
                     if (node != null && state != null && isClusterStarted) {
-                        String statsdNodeName = StatsdService.this.statsdNodeName;
-                        if (null == statsdNodeName) {
-                            statsdNodeName = node.getName();
-                        }
 
                         // Report node stats -- runs for all nodes
                         try {
@@ -155,7 +156,6 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
                                             true, // http
                                             false // circuitBreaker
                                     ),
-                                    statsdNodeName,
                                     StatsdService.this.statsdReportFsDetails
                             );
                             nodeStatsReporter
@@ -171,8 +171,7 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
                                 StatsdReporter nodeIndicesStatsReporter = new StatsdReporterNodeIndicesStats(
                                         StatsdService.this.indicesService.stats(
                                                 false // includePrevious
-                                        ),
-                                        statsdNodeName
+                                        )
                                 );
                                 nodeIndicesStatsReporter
                                         .setStatsDClient(StatsdService.this.statsdClient)
@@ -191,6 +190,11 @@ public class StatsdService extends AbstractLifecycleComponent<StatsdService> {
                                                 .indices()      // IndicesAdminClient
                                                 .prepareStats() // IndicesStatsRequestBuilder
                                                 .all()          // IndicesStatsRequestBuilder
+                                                .get(),         // IndicesStatsResponse,
+                                        StatsdService.this.client
+                                                .admin()        // AdminClient
+                                                .cluster()      // IndicesAdminClient
+                                                .prepareHealth() // IndicesStatsRequestBuilder
                                                 .get(),         // IndicesStatsResponse
                                         StatsdService.this.statsdReportIndices,
                                         StatsdService.this.statsdReportShards

@@ -1,18 +1,24 @@
 package com.automattic.elasticsearch.statsd;
 
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.stats.CommonStats;
 import org.elasticsearch.action.admin.indices.stats.IndexShardStats;
 import org.elasticsearch.action.admin.indices.stats.IndexStats;
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse;
+import org.elasticsearch.index.get.GetStats;
 
 public class StatsdReporterIndices extends StatsdReporterIndexStats {
 
     private final IndicesStatsResponse indicesStatsResponse;
     private final Boolean reportIndices;
+    private final ClusterHealthResponse clusterHealthResponse;
     private final Boolean reportShards;
 
-    public StatsdReporterIndices(IndicesStatsResponse indicesStatsResponse, Boolean reportIndices, Boolean reportShards) {
+    public StatsdReporterIndices(IndicesStatsResponse indicesStatsResponse,
+                                 ClusterHealthResponse clusterHealthResponse,
+                                 Boolean reportIndices, Boolean reportShards) {
         this.indicesStatsResponse = indicesStatsResponse;
+        this.clusterHealthResponse = clusterHealthResponse;
         this.reportIndices = reportIndices;
         this.reportShards = reportShards;
     }
@@ -24,6 +30,8 @@ public class StatsdReporterIndices extends StatsdReporterIndexStats {
                     this.buildMetricName("indices"),
                     this.indicesStatsResponse.getTotal()
             );
+
+            this.sendClusterStats(this.buildMetricName("cluster"));
 
             if (this.reportIndices) {
                 for (IndexStats indexStats : this.indicesStatsResponse.getIndices().values()) {
@@ -47,6 +55,29 @@ public class StatsdReporterIndices extends StatsdReporterIndexStats {
         } catch (Exception e) {
             this.logException(e);
         }
+    }
+
+    private void sendClusterStats(String prefix) {
+        if (null == this.clusterHealthResponse) return;
+
+        int numberOfDataNodes = this.clusterHealthResponse.getNumberOfDataNodes();
+        sendGauge(prefix,"data_nodes", numberOfDataNodes);
+        int numberOfNodes = this.clusterHealthResponse.getNumberOfNodes();
+        sendGauge(prefix,"nodes", numberOfNodes);
+        int numberOfActivePrimaryShards = this.clusterHealthResponse.getActivePrimaryShards();
+        sendGauge(prefix,"active_primary_shards", numberOfActivePrimaryShards);
+        int numberOfActiveShards = this.clusterHealthResponse.getActiveShards();
+        sendGauge(prefix,"active_shards", numberOfActiveShards);
+        int numberOfUnassignedShards = this.clusterHealthResponse.getUnassignedShards();
+        sendGauge(prefix,"unassigned_shards", numberOfUnassignedShards);
+        int numberOfDelayedUnassignedShards = this.clusterHealthResponse.getDelayedUnassignedShards();
+        sendGauge(prefix,"delayed_unassigned_shards", numberOfDelayedUnassignedShards);
+        int numberOfInitializingShards = this.clusterHealthResponse.getInitializingShards();
+        sendGauge(prefix,"initializing_shards", numberOfInitializingShards);
+        int numberOfRelocationShards = this.clusterHealthResponse.getRelocatingShards();
+        sendGauge(prefix,"reolocating_shards", numberOfRelocationShards);
+        int numberOfPendingTasks = this.clusterHealthResponse.getNumberOfPendingTasks();
+        sendGauge(prefix,"pending_tasks", numberOfPendingTasks);
     }
 
     private void sendCommonStats(String prefix, CommonStats stats) {

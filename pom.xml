@@ -9,8 +9,8 @@
     <packaging>jar</packaging>
 
     <name>elasticsearch-statsd</name>
-    <description>StatsD monitoring plugin for Elasticsearch</description>
-    <url>https://github.com/Automattic/elasticsearch-statsd-plugin/</url>
+    <description>Datadog StatsD monitoring plugin for Elasticsearch</description>
+    <url>https://github.com/ywilkof/elasticsearch-statsd-plugin/</url>
 
     <licenses>
         <license>
@@ -21,9 +21,9 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/Automattic/elasticsearch-statsd-plugin</url>
-        <connection>scm:git:git://github.com/Automattic/elasticsearch-statsd-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:Automattic/elasticsearch-statsd-plugin.git</developerConnection>
+        <url>https://github.com/ywilkof/elasticsearch-statsd-plugin</url>
+        <connection>scm:git:git://github.com/ywilkof/elasticsearch-statsd-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:ywilkof/elasticsearch-statsd-plugin.git</developerConnection>
     </scm>
 
     <developers>
@@ -51,9 +51,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.timgroup</groupId>
-            <artifactId>java-statsd-client</artifactId>
-            <version>3.0.2</version>
+            <groupId>com.datadoghq</groupId>
+            <artifactId>java-dogstatsd-client</artifactId>
+            <version>2.3</version>
         </dependency>
 
         <dependency>

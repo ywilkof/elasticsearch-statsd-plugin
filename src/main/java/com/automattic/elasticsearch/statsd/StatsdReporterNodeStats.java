@@ -14,12 +14,10 @@ import java.util.Iterator;
 public class StatsdReporterNodeStats extends StatsdReporter {
 
     private final NodeStats nodeStats;
-    private final String nodeName;
     private final Boolean statsdReportFsDetails;
 
-    public StatsdReporterNodeStats(NodeStats nodeStats, String nodeName, Boolean statsdReportFsDetails) {
+    public StatsdReporterNodeStats(NodeStats nodeStats, Boolean statsdReportFsDetails) {
         this.nodeStats = nodeStats;
-        this.nodeName = nodeName;
         this.statsdReportFsDetails = statsdReportFsDetails;
     }
 
@@ -172,6 +170,6 @@ public class StatsdReporterNodeStats extends StatsdReporter {
     }
 
     private String getPrefix(String prefix) {
-        return this.buildMetricName("node." + this.nodeName + "." + prefix);
+        return this.buildMetricName("node." + prefix);
     }
 }

@@ -5,16 +5,14 @@ import org.elasticsearch.indices.NodeIndicesStats;
 public class StatsdReporterNodeIndicesStats extends StatsdReporterIndexStats {
 
     private final NodeIndicesStats nodeIndicesStats;
-    private final String nodeName;
 
-    public StatsdReporterNodeIndicesStats(NodeIndicesStats nodeIndicesStats, String nodeName) {
+    public StatsdReporterNodeIndicesStats(NodeIndicesStats nodeIndicesStats) {
         this.nodeIndicesStats = nodeIndicesStats;
-        this.nodeName = nodeName;
     }
 
     public void run() {
         try {
-            String prefix = this.buildMetricName("node." + this.nodeName + ".indices");
+            String prefix = this.buildMetricName("node.indices");
             this.sendDocsStats(prefix + ".docs", this.nodeIndicesStats.getDocs());
             this.sendStoreStats(prefix + ".store", this.nodeIndicesStats.getStore());
             this.sendIndexingStats(prefix + ".indexing", this.nodeIndicesStats.getIndexing());
